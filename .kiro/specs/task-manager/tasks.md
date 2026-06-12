@@ -71,13 +71,13 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
     - Use fast-check to generate arbitrary Task_Lists and a valid target ID; call `store.remove(id)`; assert only that task is absent and all others are unmodified in order
     - **Validates: Requirements 4.2**
 
-- [ ] 4. Implement the Task Store — persistence layer
-  - [ ] 4.1 Implement `_persist()` and `_deserialize(raw)`
+- [x] 4. Implement the Task Store — persistence layer
+  - [x] 4.1 Implement `_persist()` and `_deserialize(raw)`
     - `_persist`: serializes `_tasks` to JSON and writes to `localStorage["task-manager-tasks"]`; catches storage errors and emits a user-visible banner message
     - `_deserialize`: parses JSON; validates each element has string `id`, non-empty string `title`, and boolean `completed`; drops invalid records with a console warning; returns `null` on top-level parse failure
     - _Requirements: 5.1, 5.4_
 
-  - [ ] 4.2 Implement `load()`
+  - [x] 4.2 Implement `load()`
     - Reads `localStorage["task-manager-tasks"]`; calls `_deserialize`; on `null` result clears the key and sets `_tasks = []`; on missing key sets `_tasks = []`
     - _Requirements: 5.2, 5.3, 5.4_
 

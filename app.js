@@ -52,10 +52,10 @@
     return { valid: true };
   }
 
-  // ── taskStore — core data operations ─────────────────────────────────────
+  // ── taskStore — core data operations + persistence ───────────────────────
   // Owns the single source of truth: the private _tasks array.
   // All mutations go through this object; nothing else touches _tasks directly.
-  // Persistence (_persist, _deserialize, load) is added in Task 4.
+  // Persistence layer (_persist, _deserialize, load) is implemented in Task 4.
 
   var taskStore = (function () {
     /** @type {Array<{id: string, title: string, completed: boolean}>} */
@@ -140,7 +140,7 @@
         completed: false,
       };
       _tasks.push(task);
-      // _persist() will be wired in Task 4.
+      _persist(); // Requirement 5.1 — sync to storage on every mutation.
       return task;
     }
 
@@ -165,7 +165,7 @@
         return undefined;
       }
       task.completed = !task.completed;
-      // _persist() will be wired in Task 4.
+      _persist(); // Requirement 5.1 — sync to storage on every mutation.
       return task;
     }
 
@@ -189,7 +189,124 @@
         return;
       }
       _tasks.splice(index, 1);
-      // _persist() will be wired in Task 4.
+      _persist(); // Requirement 5.1 — sync to storage on every mutation.
+    }
+
+    // ── 4.1  _persist ─────────────────────────────────────────────────────
+    /**
+     * Serialize _tasks to JSON and write it to localStorage.
+     *
+     * Key: "task-manager-tasks"  (Requirement 5.1)
+     *
+     * localStorage.setItem can throw when storage quota is exceeded or when
+     * the browser blocks storage (e.g. Safari private mode). Both are caught;
+     * in-memory state is left intact and an error banner is shown to the user.
+     *
+     * Satisfies: Requirement 5.1 — every mutation immediately syncs to storage.
+     */
+    function _persist() {
+      try {
+        localStorage.setItem("task-manager-tasks", JSON.stringify(_tasks));
+      } catch (err) {
+        console.error("[taskStore] _persist: could not write to localStorage", err);
+        var banner = document.getElementById("error-banner");
+        if (banner) {
+          banner.textContent =
+            "Warning: your tasks could not be saved. Storage may be full or unavailable.";
+          banner.hidden = false;
+        }
+      }
+    }
+
+    // ── 4.1  _deserialize ──────────────────────────────────────────────────
+    /**
+     * Parse a raw JSON string from localStorage and validate its shape.
+     *
+     * Validation rules per the Task data model:
+     *   - Top-level value must be an array.
+     *   - Each element must have:
+     *       id        {string, non-empty}
+     *       title     {string, non-empty}
+     *       completed {boolean}
+     *   - Malformed elements are dropped with a console warning; partial
+     *     corruption does not wipe the entire list.
+     *
+     * Returns null if the top-level parse fails entirely, signalling to load()
+     * that the stored data is unrecoverable.
+     *
+     * Satisfies: Requirements 5.4 (malformed data → empty list + key removed),
+     *            5.5 (round-trip: every valid Task survives serialize→deserialize).
+     *
+     * @param {string} raw - Raw string from localStorage.getItem().
+     * @returns {Array<{id:string,title:string,completed:boolean}>|null}
+     */
+    function _deserialize(raw) {
+      var parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (_) {
+        return null; // Not valid JSON — unrecoverable.
+      }
+
+      if (!Array.isArray(parsed)) {
+        return null; // Valid JSON but wrong shape — unrecoverable.
+      }
+
+      // Keep only elements that fully match the Task shape.
+      var valid = parsed.filter(function (item) {
+        if (
+          item === null ||
+          typeof item !== "object" ||
+          typeof item.id !== "string" ||
+          item.id.length === 0 ||
+          typeof item.title !== "string" ||
+          item.title.length === 0 ||
+          typeof item.completed !== "boolean"
+        ) {
+          console.warn("[taskStore] _deserialize: dropping malformed record", item);
+          return false;
+        }
+        return true;
+      });
+
+      return valid;
+    }
+
+    // ── 4.2  load ──────────────────────────────────────────────────────────
+    /**
+     * Hydrate _tasks from localStorage before the first render.
+     *
+     * Behaviour matrix:
+     *   Storage key absent       → _tasks = []                  (Req 5.3)
+     *   Key present, valid JSON  → _tasks = deserialized tasks   (Req 5.2)
+     *   Key present, bad data    → _tasks = [], key removed      (Req 5.4)
+     *
+     * Must be called by main() before render() so no tasks are ever displayed
+     * from a default or stale state (Req 5.2: "before any Task is displayed").
+     *
+     * Satisfies: Requirements 5.2, 5.3, 5.4.
+     */
+    function load() {
+      var raw = localStorage.getItem("task-manager-tasks");
+
+      if (raw === null) {
+        // Requirement 5.3 — nothing stored; start fresh.
+        _tasks = [];
+        return;
+      }
+
+      var result = _deserialize(raw);
+
+      if (result === null) {
+        // Requirement 5.4 — unrecoverable data; remove it and start fresh.
+        console.warn("[taskStore] load: malformed storage data removed");
+        localStorage.removeItem("task-manager-tasks");
+        _tasks = [];
+        return;
+      }
+
+      // Requirement 5.2 — restore the persisted list.
+      _tasks = result;
     }
 
     return {
@@ -197,7 +314,7 @@
       add: add,
       toggle: toggle,
       remove: remove,
-      // load() and internal _persist/_deserialize are added in Task 4.
+      load: load,
     };
   })();
 

@@ -105,8 +105,8 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
 - [ ] 5. Checkpoint — Ensure all store and validator tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Implement the Renderer
-  - [ ] 6.1 Implement `render(tasks, container)`
+- [x] 6. Implement the Renderer
+  - [x] 6.1 Implement `render(tasks, container)`
     - When `tasks` is empty, inject an empty-state message element into `container`
     - When `tasks` is non-empty, build a `<ul>` where each `<li>` has `data-task-id`, a checkbox/toggle control, the task title, and a delete button
     - Apply the `task--complete` CSS class to `<li>` elements whose task has `completed: true`

@@ -318,7 +318,98 @@
     };
   })();
 
-  /* renderer — Task 6 */
+  // ── renderer ──────────────────────────────────────────────────────────────
+  // Pure DOM builder — reads task data, writes DOM, no side effects elsewhere.
+  // Called after every state mutation (by main's event handlers, Task 7).
+
+  /**
+   * Render the current task list into the given container element.
+   *
+   * Strategy: full replacement (container.innerHTML = "").
+   * For the expected list sizes (tens to low hundreds) this is fast enough
+   * and far simpler than keyed diffing. Every call produces a faithful
+   * snapshot of the task array passed in.
+   *
+   * Two output modes:
+   *   - tasks.length === 0  → inject the empty-state message (Req 2.2)
+   *   - tasks.length  >  0  → build a <ul> with one <li> per task (Req 2.1)
+   *
+   * Each <li> carries:
+   *   - data-task-id           so the delegated click handler (Task 7) can
+   *                            identify which task was acted on
+   *   - task--complete class   when completed === true (Req 2.3, 3.3)
+   *   - a checkbox toggle      aria-labelled for screen readers (Req 2.3, 3.1/3.2)
+   *   - the task title span    text content set exactly as stored (Req 2.4)
+   *   - a delete button        aria-labelled for screen readers (Req 4.1)
+   *
+   * Satisfies: Requirements 2.1, 2.2, 2.3, 2.4, 3.3, 4.1.
+   *
+   * @param {Array<{id: string, title: string, completed: boolean}>} tasks
+   * @param {HTMLElement} container - The #task-list-container element.
+   */
+  function render(tasks, container) {
+    // Wipe previous content on every call — full re-render approach.
+    container.innerHTML = "";
+
+    // ── Empty state (Requirement 2.2) ────────────────────────────────────
+    if (tasks.length === 0) {
+      var emptyMsg = document.createElement("p");
+      emptyMsg.className = "task-list__empty";
+      emptyMsg.id = "empty-state";
+      emptyMsg.textContent = "No tasks yet. Add one above!";
+      container.appendChild(emptyMsg);
+      return;
+    }
+
+    // ── Task list (Requirements 2.1, 2.3, 2.4) ──────────────────────────
+    var ul = document.createElement("ul");
+    ul.className = "task-list";
+    // aria-label gives screen readers context for the list.
+    ul.setAttribute("aria-label", "Task list");
+
+    tasks.forEach(function (task) {
+      var li = document.createElement("li");
+      li.className = "task-item" + (task.completed ? " task--complete" : "");
+      // data-task-id lets the delegated handler resolve the task without a
+      // secondary lookup — it's the only coupling between DOM and store.
+      li.setAttribute("data-task-id", task.id);
+
+      // ── Toggle checkbox ──────────────────────────────────────────────
+      // Using a real <input type="checkbox"> gives free keyboard support
+      // and the correct checked/unchecked semantics for screen readers.
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "task-item__toggle";
+      checkbox.checked = task.completed;
+      // aria-label encodes the task title so the control is self-describing
+      // without needing a visible <label> next to it.
+      checkbox.setAttribute(
+        "aria-label",
+        (task.completed ? "Mark incomplete: " : "Mark complete: ") + task.title
+      );
+
+      // ── Title span ───────────────────────────────────────────────────
+      // textContent (not innerHTML) ensures the title is displayed exactly
+      // as stored — no HTML injection risk (Requirement 2.4).
+      var titleSpan = document.createElement("span");
+      titleSpan.className = "task-item__title";
+      titleSpan.textContent = task.title;
+
+      // ── Delete button ────────────────────────────────────────────────
+      var deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "task-item__delete";
+      deleteBtn.setAttribute("aria-label", "Delete task: " + task.title);
+      deleteBtn.textContent = "Delete";
+
+      li.appendChild(checkbox);
+      li.appendChild(titleSpan);
+      li.appendChild(deleteBtn);
+      ul.appendChild(li);
+    });
+
+    container.appendChild(ul);
+  }
 
   /* main — Task 7 */
 })();

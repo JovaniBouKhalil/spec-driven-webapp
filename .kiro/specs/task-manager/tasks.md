@@ -39,12 +39,12 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
     - Test a 255-char string passes, a 1-char string passes
     - _Requirements: 1.1, 1.3, 1.4_
 
-- [ ] 3. Implement the Task Store — core data operations
-  - [ ] 3.1 Implement `_generateId()` using `crypto.randomUUID()` with a `Date.now()`+`Math.random()` base-36 fallback
+- [x] 3. Implement the Task Store — core data operations
+  - [x] 3.1 Implement `_generateId()` using `crypto.randomUUID()` with a `Date.now()`+`Math.random()` base-36 fallback
     - After generation, verify the ID is not already present in `_tasks` before returning
     - _Requirements: 1.5_
 
-  - [ ] 3.2 Implement `add(title)`, `toggle(id)`, `remove(id)`, and `getAll()`
+  - [x] 3.2 Implement `add(title)`, `toggle(id)`, `remove(id)`, and `getAll()`
     - `add`: trims title, generates a unique ID, appends `{ id, title, completed: false }` to `_tasks`
     - `toggle`: flips `completed` on the matching task; logs a warning and no-ops if ID is unknown
     - `remove`: splices the matching task out; logs a warning and no-ops if ID is unknown

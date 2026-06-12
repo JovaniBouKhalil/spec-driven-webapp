@@ -17,8 +17,8 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
   - Link `style.css` and `app.js` from `index.html`
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 2. Implement the Validator module
-  - [ ] 2.1 Implement the `validate(title)` pure function
+- [x] 2. Implement the Validator module
+  - [x] 2.1 Implement the `validate(title)` pure function
     - Returns `{ valid: true }` for trimmed titles of length 1–255
     - Returns `{ valid: false, reason: "EMPTY" }` for empty or whitespace-only strings
     - Returns `{ valid: false, reason: "TOO_LONG" }` for trimmed titles exceeding 255 characters

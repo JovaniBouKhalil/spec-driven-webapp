@@ -16,7 +16,41 @@
   // ── Placeholder sections ──────────────────────────────────────────────────
   // Each section will be filled in as the corresponding task is implemented.
 
-  /* validator — Task 2 */
+  // ── validator ─────────────────────────────────────────────────────────────
+  // Pure function — no side effects, no DOM access, no storage access.
+  // Called before any state mutation to decide whether a proposed title is
+  // acceptable (Requirements 1.1, 1.3, 1.4).
+
+  /**
+   * Validate a proposed task title.
+   *
+   * Rules (from Requirements 1.1, 1.3, 1.4):
+   *   - Empty or whitespace-only → EMPTY
+   *   - Trimmed length > 255     → TOO_LONG
+   *   - Otherwise                → valid
+   *
+   * The function does NOT return the trimmed value; callers are responsible
+   * for trimming before passing the title to the task store.
+   *
+   * @param {string} title - The raw value from the input field.
+   * @returns {{ valid: true } | { valid: false, reason: "EMPTY" | "TOO_LONG" }}
+   */
+  function validate(title) {
+    var trimmed = title.trim();
+
+    if (trimmed.length === 0) {
+      // Requirement 1.3 — empty or whitespace-only title must be rejected.
+      return { valid: false, reason: "EMPTY" };
+    }
+
+    if (trimmed.length > 255) {
+      // Requirement 1.4 — title exceeding 255 characters must be rejected.
+      return { valid: false, reason: "TOO_LONG" };
+    }
+
+    // Requirement 1.1 — title is acceptable.
+    return { valid: true };
+  }
 
   /* taskStore — Tasks 3 & 4 */
 

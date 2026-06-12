@@ -10,7 +10,7 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
 
 ## Tasks
 
-- [ ] 1. Set up project structure and static shell
+- [x] 1. Set up project structure and static shell
   - Create `index.html` with the app skeleton: task input form, task list container, and empty-state placeholder
   - Create `style.css` with base layout styles, the `task--complete` class (strikethrough), and validation/error message styles
   - Create `app.js` as the single JavaScript entry point (IIFE or ES module)

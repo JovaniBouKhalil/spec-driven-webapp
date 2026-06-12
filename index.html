@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app" role="main">
+      <h1 class="app__title">Task Manager</h1>
+
+      <!-- Add Task Form -->
+      <form class="task-form" id="task-form" novalidate>
+        <label class="task-form__label" for="task-input">New task</label>
+        <div class="task-form__row">
+          <input
+            class="task-form__input"
+            type="text"
+            id="task-input"
+            name="task-input"
+            placeholder="Enter a task title…"
+            autocomplete="off"
+            aria-describedby="task-input-error"
+            aria-required="true"
+            maxlength="300"
+          />
+          <button class="task-form__btn" type="submit">Add</button>
+        </div>
+        <!-- Validation message — hidden until needed -->
+        <p
+          class="task-form__error"
+          id="task-input-error"
+          role="alert"
+          aria-live="polite"
+          hidden
+        ></p>
+      </form>
+
+      <!-- Task List Container -->
+      <section class="task-list-section" aria-label="Task list">
+        <div id="task-list-container">
+          <!-- Empty-state message — shown when Task_List is empty -->
+          <p class="task-list__empty" id="empty-state">
+            No tasks yet. Add one above!
+          </p>
+        </div>
+      </section>
+
+      <!-- Storage error banner — hidden until needed -->
+      <div
+        class="error-banner"
+        id="error-banner"
+        role="alert"
+        aria-live="assertive"
+        hidden
+      ></div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

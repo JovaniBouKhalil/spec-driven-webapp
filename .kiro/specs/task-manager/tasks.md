@@ -126,18 +126,18 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
     - Delete button and toggle control are present on each list item
     - _Requirements: 2.1, 2.2, 2.3, 4.1_
 
-- [ ] 7. Wire event handlers and bootstrap the application
-  - [ ] 7.1 Implement the add-form `submit` handler
+- [x] 7. Wire event handlers and bootstrap the application
+  - [x] 7.1 Implement the add-form `submit` handler
     - Trim the input value; call `validate()`; on failure display the inline validation message associated with the input via `aria-describedby` and do not mutate state; on success call `store.add()`, re-render, clear the input, and return focus to the input field
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 7.2 Implement the delegated `click` handler on the task list
+  - [x] 7.2 Implement the delegated `click` handler on the task list
     - Identify the target by `data-task-id` and by control type (toggle vs. delete)
     - For toggle: call `store.toggle(id)` and re-render; display an error banner if toggle fails
     - For delete: call `window.confirm()` for confirmation; on confirm call `store.remove(id)` and re-render; on cancel leave state unchanged; display an error banner if remove fails
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 7.3 Implement the `main` bootstrap sequence
+  - [x] 7.3 Implement the `main` bootstrap sequence
     - Call `store.load()`, then `render(store.getAll(), listContainer)`, then attach the add-form and list click handlers
     - _Requirements: 5.2, 5.3_
 

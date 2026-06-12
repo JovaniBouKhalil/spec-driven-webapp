@@ -411,5 +411,188 @@
     container.appendChild(ul);
   }
 
-  /* main — Task 7 */
+  // ── main ──────────────────────────────────────────────────────────────────
+  // Wires all pieces together and bootstraps the application.
+  // Three responsibilities:
+  //   7.1  handleAddFormSubmit  — validate → add → re-render → clear input
+  //   7.2  handleListClick      — delegated toggle / delete handler
+  //   7.3  bootstrap            — load storage → render → attach listeners
+
+  (function main() {
+
+    // ── DOM references ──────────────────────────────────────────────────────
+    var form      = document.getElementById("task-form");
+    var input     = document.getElementById("task-input");
+    var errorMsg  = document.getElementById("task-input-error");
+    var container = document.getElementById("task-list-container");
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Show a validation message below the input field.
+     * Associates it with the input via aria-describedby (already set in HTML).
+     * Satisfies: Requirements 1.3, 1.4 — validation message must be displayed.
+     */
+    function showInputError(message) {
+      errorMsg.textContent = message;
+      errorMsg.hidden = false;
+      input.classList.add("task-form__input--invalid");
+      input.setAttribute("aria-invalid", "true");
+    }
+
+    /**
+     * Clear any previously shown validation message.
+     */
+    function clearInputError() {
+      errorMsg.textContent = "";
+      errorMsg.hidden = true;
+      input.classList.remove("task-form__input--invalid");
+      input.removeAttribute("aria-invalid");
+    }
+
+    // ── 7.1  Add-form submit handler ────────────────────────────────────────
+    /**
+     * Handles the add-task form submission.
+     *
+     * Flow:
+     *   1. Prevent default form submission (page reload).
+     *   2. Read the raw input value.
+     *   3. Run validate() — if invalid, show the appropriate message and stop.
+     *   4. Call taskStore.add() with the raw value (store trims internally).
+     *   5. Re-render the list.
+     *   6. Clear the input field and return focus to it (Req 1.2).
+     *   7. Clear any leftover validation message.
+     *
+     * Satisfies: Requirements 1.1, 1.2, 1.3, 1.4.
+     */
+    function handleAddFormSubmit(event) {
+      event.preventDefault();
+
+      var raw    = input.value;
+      var result = validate(raw);
+
+      if (!result.valid) {
+        if (result.reason === "EMPTY") {
+          // Requirement 1.3 — display message and do not add a task.
+          showInputError("A task title is required.");
+        } else if (result.reason === "TOO_LONG") {
+          // Requirement 1.4 — display message and do not add a task.
+          showInputError("Task title must be 255 characters or fewer.");
+        }
+        input.focus();
+        return;
+      }
+
+      // Valid title — add, re-render, reset.
+      taskStore.add(raw);
+      render(taskStore.getAll(), container);
+
+      // Requirement 1.2 — clear the input field after a successful add.
+      input.value = "";
+      clearInputError();
+      // Return focus to the input so the user can immediately type another task.
+      input.focus();
+    }
+
+    // ── 7.2  Delegated list click handler ───────────────────────────────────
+    /**
+     * Single click handler on the task-list container using event delegation.
+     *
+     * Identifies the target by walking up to the nearest [data-task-id] element,
+     * then inspects whether the clicked element was the checkbox toggle or the
+     * delete button.
+     *
+     * Toggle flow (Req 3.1, 3.2, 3.3, 3.4):
+     *   1. Call taskStore.toggle(id).
+     *   2. Re-render immediately (≤500 ms — synchronous, Req 3.3).
+     *   3. If toggle returned undefined (unknown id), show error banner (Req 3.4).
+     *
+     * Delete flow (Req 4.1, 4.2, 4.3, 4.4, 4.5):
+     *   1. Show window.confirm() — Req 4.1 requires confirmation before removal.
+     *   2. If cancelled, leave state unchanged — Req 4.3.
+     *   3. If confirmed, call taskStore.remove(id) and re-render (Req 4.2, 4.4).
+     *   4. On unexpected error, show error banner and leave task intact (Req 4.5).
+     */
+    function handleListClick(event) {
+      // Walk up from the click target to find the <li data-task-id="…">.
+      var li = event.target.closest("[data-task-id]");
+      if (!li) return; // Click was outside any task item.
+
+      var id = li.getAttribute("data-task-id");
+
+      // ── Toggle ────────────────────────────────────────────────────────────
+      if (event.target.classList.contains("task-item__toggle")) {
+        var toggled = taskStore.toggle(id);
+        if (toggled === undefined) {
+          // Requirement 3.4 — status update failed; retain previous state.
+          showBanner("Could not update task status. Please try again.");
+        }
+        // Re-render immediately — satisfies the ≤500 ms requirement (Req 3.3).
+        render(taskStore.getAll(), container);
+        return;
+      }
+
+      // ── Delete ────────────────────────────────────────────────────────────
+      if (event.target.classList.contains("task-item__delete")) {
+        // Requirement 4.1 — confirmation prompt before any removal.
+        var confirmed = window.confirm("Delete this task?");
+
+        if (!confirmed) {
+          // Requirement 4.3 — user cancelled; leave list unchanged.
+          return;
+        }
+
+        try {
+          taskStore.remove(id);
+          // Requirement 4.2 — remove from list and re-render immediately.
+          render(taskStore.getAll(), container);
+          // Requirement 4.4 — if list is now empty, render shows the empty-state
+          // message automatically (handled inside render()).
+        } catch (err) {
+          // Requirement 4.5 — deletion failed; retain task and show error.
+          console.error("[main] handleListClick: remove failed", err);
+          showBanner("Could not delete the task. Please try again.");
+          render(taskStore.getAll(), container);
+        }
+      }
+    }
+
+    /**
+     * Show a non-blocking error banner at the bottom of the app.
+     * Used for storage errors and unexpected operation failures.
+     *
+     * @param {string} message
+     */
+    function showBanner(message) {
+      var banner = document.getElementById("error-banner");
+      if (banner) {
+        banner.textContent = message;
+        banner.hidden = false;
+      }
+    }
+
+    // ── 7.3  Bootstrap sequence ─────────────────────────────────────────────
+    /**
+     * Runs once on page load.
+     *
+     * Order matters:
+     *   1. taskStore.load()   — hydrate _tasks from localStorage BEFORE render
+     *                           (Req 5.2: "before any Task is displayed to the user")
+     *   2. render(...)        — paint the initial UI from the restored task list
+     *   3. addEventListener   — attach handlers only after DOM is ready
+     *
+     * Satisfies: Requirements 5.2, 5.3 (via taskStore.load()).
+     */
+
+    // 1. Restore persisted state (Req 5.2, 5.3).
+    taskStore.load();
+
+    // 2. Paint initial UI.
+    render(taskStore.getAll(), container);
+
+    // 3. Attach event listeners.
+    form.addEventListener("submit", handleAddFormSubmit);
+    container.addEventListener("click", handleListClick);
+
+  })();
 })();

@@ -149,7 +149,7 @@ Tasks are ordered to build the pure-logic core first, then the DOM layer, and fi
     - Empty-state message appears when the last task is deleted
     - _Requirements: 1.2, 1.3, 1.4, 4.1, 4.3, 4.4_
 
-- [ ] 8. Final checkpoint — Ensure all tests pass
+- [x] 8. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ---
